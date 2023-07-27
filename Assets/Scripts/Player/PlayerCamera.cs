@@ -159,7 +159,7 @@ public class PlayerCamera : MonoBehaviour
 
         trans.eulerAngles = new Vector3(targetRotation.eulerAngles.x, targetRotation.eulerAngles.y, 0);
 
-        modelHolder.forward = new Vector3(trans.forward.x, 0, trans.forward.z);
+        //modelHolder.forward = new Vector3(trans.forward.x, 0, trans.forward.z);
     }
 
     void ThirdPerson()
@@ -181,6 +181,6 @@ public class PlayerCamera : MonoBehaviour
         
         trans.forward = (OrbitPoint - trans.position).normalized;
 
-        modelHolder.forward = new Vector3(trans.forward.x, 0, trans.forward.z);
+        //modelHolder.forward = new Vector3(trans.forward.x, 0, trans.forward.z);
     }
 }

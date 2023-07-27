@@ -8,6 +8,8 @@ public class Player : MonoBehaviour
     [SerializeField] Transform trans;
     [SerializeField] Transform modelHolder;
     [SerializeField] CharacterController charController;
+    [SerializeField] Animator animator;
+    [SerializeField] private Transform mainCamera;
 
     [Header("Gravity")]
     [SerializeField] float maxGravity = 92;
@@ -25,6 +27,7 @@ public class Player : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] float movespeed = 42;
+    [SerializeField] float turnspeed = 12;
     [SerializeField] float timeToMaxSpeed = .3f;
     [SerializeField] float timeToLoseMaxSpeed = .2f;
     [SerializeField] float reverseMomentumMultiplier = .6f;
@@ -88,35 +91,56 @@ public class Player : MonoBehaviour
     {
         localMovementDirection = Vector3.zero;
 
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main Camera not assigned in Player");
+            return;
+        }
+
         //Right and left
-        if(Input.GetKey(KeyCode.D))
-            localMovementDirection.x = 1;
-        else if(Input.GetKey(KeyCode.A))
-            localMovementDirection.x = -1;
+        if (Input.GetKey(KeyCode.D))
+            localMovementDirection += mainCamera.right;
+        else if (Input.GetKey(KeyCode.A))
+            localMovementDirection -= mainCamera.right;
 
         //Forward and back
-        if(Input.GetKey(KeyCode.W))
-            localMovementDirection.z = 1;
-        else if(Input.GetKey(KeyCode.S))
-            localMovementDirection.z = -1;
+        if (Input.GetKey(KeyCode.W))
+            localMovementDirection += mainCamera.forward;
+        else if (Input.GetKey(KeyCode.S))
+            localMovementDirection -= mainCamera.forward;
 
-        if(localMovementDirection != Vector3.zero)
+        // Make sure movement is not affected by camera's up and down tilt
+        localMovementDirection.y = 0;
+        localMovementDirection.Normalize();
+
+        if (localMovementDirection != Vector3.zero)
         {
-            Vector3 WorldMovementDirection = modelHolder.TransformDirection(localMovementDirection.normalized);
+            Vector3 WorldMovementDirection = localMovementDirection;
+
+            float singleStep = turnspeed * Time.deltaTime;
+            Vector3 newDirection = Vector3.RotateTowards(modelHolder.forward, WorldMovementDirection, singleStep, 0.0f);
+            modelHolder.rotation = Quaternion.LookRotation(newDirection);
 
             float multiplier = 1;
             float dot = Vector3.Dot(WorldMovementDirection.normalized, worldVelocity.normalized);
 
-            if(dot < 0)
+            if (dot < 0)
                 multiplier += -dot * reverseMomentumMultiplier;
 
-            Vector3 newVelocity = worldVelocity + WorldMovementDirection * 
+            Vector3 newVelocity = worldVelocity + WorldMovementDirection *
             VelocityGainPerSecond * multiplier * Time.deltaTime;
 
-            if(worldVelocity.magnitude > movespeed)
+            if (worldVelocity.magnitude > movespeed)
                 worldVelocity = Vector3.ClampMagnitude(newVelocity, worldVelocity.magnitude);
             else
                 worldVelocity = Vector3.ClampMagnitude(newVelocity, movespeed);
+
+            // Update isRunning in the animator
+            animator.SetBool("isRunning", true);
+        }
+        else
+        {
+            animator.SetBool("isRunning", false);
         }
     }
 
@@ -170,6 +194,9 @@ public class Player : MonoBehaviour
         {
             yVelocity = jumpPower;
             grounded = false;
+
+            // Set isJumped in the animator
+            animator.SetTrigger("isJumped");
         }
     }
 
