@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -104,43 +103,43 @@ public class Telekinesis : MonoBehaviour
 
     void PullingAndPushing()
     {
-        if(target == null || targetIsOutsideRange)
+        if (target == null || targetIsOutsideRange)
         {
             state = State.Idle;
             return;
         }
 
-        if(!Input.anyKey)
+        if (!Input.anyKey)
         {
             state = State.Idle;
             return;
         }
 
-        if(Input.GetMouseButton(0))
+        if (Input.GetKey(KeyCode.Q))
         {
-            //If both are pressed at the same time, explode at that point
-            if (Input.GetMouseButton(1))
+            // If both are pressed at the same time, explode at that point
+            if (Input.GetKey(KeyCode.E))
             {
-				Vector3 explosionPosition = targetHitPoint;
+                Vector3 explosionPosition = targetHitPoint;
                 Collider[] colliders = Physics.OverlapSphere(explosionPosition, explosiveRadius);
                 foreach (Collider struck in colliders)
                 {
                     Rigidbody rb = struck.GetComponent<Rigidbody>();
-					if (rb != null)
+                    if (rb != null)
                     {
-						rb.AddExplosionForce(explosiveForce, explosionPosition, explosiveRadius, 1.5f);
-					}
+                        rb.AddExplosionForce(explosiveForce, explosionPosition, explosiveRadius, 1.5f);
+                    }
                 }
                 state = State.Exploding;
-			}
+            }
             else
             {
-				targetRigidbody.AddForce((baseTrans.position - targetHitPoint).normalized * pullForce, ForceMode.Acceleration);
-				state = State.Pulling;
-			}
-            
+                targetRigidbody.AddForce((baseTrans.position - targetHitPoint).normalized * pullForce, ForceMode.Acceleration);
+                state = State.Pulling;
+            }
+
         }
-        else if(Input.GetMouseButton(1))
+        else if (Input.GetKey(KeyCode.E))
         {
             targetRigidbody.AddForce((targetHitPoint - baseTrans.position).normalized * pushForce, ForceMode.Acceleration);
             state = State.Pushing;

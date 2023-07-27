@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -11,10 +13,18 @@ public class Player : MonoBehaviour
     [SerializeField] Animator animator;
     [SerializeField] private Transform mainCamera;
 
+    [Header("GUI References")]
+    [SerializeField] Image crosshair;
+
+    [Header("Cinemachine References")]
+    [SerializeField] CinemachineFreeLook freeLookCamera;
+    [SerializeField] CinemachineVirtualCamera aimCamera;
+
     [Header("Gravity")]
     [SerializeField] float maxGravity = 92;
     [SerializeField] float timeToMaxGravity = .6f;
 
+    private bool isAiming = false;
     private float yVelocity = 0;
 
     private float GravityPerSecond
@@ -87,6 +97,11 @@ public class Player : MonoBehaviour
             wallDetectionLayerMask.value).Length > 0;
     }
 
+    private void Start()
+    {
+        crosshair.enabled = false;
+    }
+
     void Movement()
     {
         localMovementDirection = Vector3.zero;
@@ -95,6 +110,13 @@ public class Player : MonoBehaviour
         {
             Debug.LogError("Main Camera not assigned in Player");
             return;
+        }
+
+        if (isAiming)
+        {
+            Quaternion targetRotation = Quaternion.Euler(0f, mainCamera.transform.eulerAngles.y, 0f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
+            charController.Move(transform.TransformDirection(localMovementDirection.x, 0f, localMovementDirection.z) * Time.deltaTime * movespeed);
         }
 
         //Right and left
@@ -141,6 +163,28 @@ public class Player : MonoBehaviour
         else
         {
             animator.SetBool("isRunning", false);
+        }
+    }
+
+    void Aim()
+    {
+        //Switch to aim camera when right mouse button is clicked, switch back to free look when it's clicked again
+        if (Input.GetMouseButtonDown(1))
+        {
+            if (isAiming)
+            {
+                aimCamera.Priority = 9;
+                freeLookCamera.Priority = 11;
+                isAiming = false;
+                crosshair.enabled = false;
+            }
+            else
+            {
+                aimCamera.Priority = 11;
+                freeLookCamera.Priority = 9;
+                isAiming = true;
+                crosshair.enabled = true;
+            }
         }
     }
 
@@ -249,6 +293,7 @@ public class Player : MonoBehaviour
         Gravity();
         WallJumping();
         Jumping();
+        Aim();
         ApplyVelocity();
     }
 }
